@@ -1,0 +1,77 @@
+body {
+    margin: 0;
+    background: #f5f6fa;
+}
+
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: #212529;
+    color: #fff;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.sidebar-brand {
+    text-align: center;
+}
+
+.sidebar .nav-link {
+    color: #ced4da;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    transition: .2s;
+}
+
+.sidebar .nav-link:hover {
+    background: #343a40;
+    color: #fff;
+}
+
+.sidebar .nav-link.active {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header {
+    background: #fff;
+    padding: 15px 20px;
+}
+
+.app-content {
+    padding: 20px;
+    flex: 1;
+}
+
+.offcanvas {
+    background: #212529;
+    color: #fff;
+}
+
+.offcanvas .nav-link {
+    color: #ced4da;
+}
+
+.offcanvas .nav-link.active {
+    color: #fff;
+    background: #0d6efd;
+    border-radius: 8px;
+}
+
+@media (max-width:991.98px) {
+
+    .app-content {
+        padding: 15px;
+    }
+
+}

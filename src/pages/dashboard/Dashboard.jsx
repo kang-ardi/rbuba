@@ -1,15 +1,65 @@
+import DashboardLayout from "../../layouts/DashboardLayout";
+
 export default function Dashboard() {
   return (
-    <div className="container py-5">
+    <DashboardLayout title="Dashboard">
 
-      <h2>Dashboard</h2>
+      <div className="container-fluid">
 
-      <hr />
+        <div className="row g-4">
 
-      <p>
-        Dashboard akan dibuat pada Task berikutnya.
-      </p>
+          <div className="col-md-4">
 
-    </div>
+            <div className="card shadow-sm">
+
+              <div className="card-body">
+
+                <h6>Siswa Aktif</h6>
+
+                <h2>0</h2>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="col-md-4">
+
+            <div className="card shadow-sm">
+
+              <div className="card-body">
+
+                <h6>Siswa Menunggak</h6>
+
+                <h2>0</h2>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="col-md-4">
+
+            <div className="card shadow-sm">
+
+              <div className="card-body">
+
+                <h6>Total Tunggakan</h6>
+
+                <h2>Rp 0</h2>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </DashboardLayout>
   );
 }
