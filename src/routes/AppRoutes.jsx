@@ -5,6 +5,7 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import StudentList from "../pages/students/StudentList";
 import PaymentList from "../pages/payments/PaymentList";
 import Profile from "../pages/profile/Profile";
+import TestFirebase from "../pages/TestFirebase";
 
 export default function AppRoutes() {
   return (
@@ -54,6 +55,10 @@ export default function AppRoutes() {
           element={
             <Profile />
           } 
+        />
+        <Route
+            path="/test"
+            element={<TestFirebase />}
         />
 
       </Routes>
