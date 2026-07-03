@@ -18,13 +18,11 @@ const login = async (username, password) => {
       throw new Error("Akun telah dinonaktifkan.");
     }
 
-    const credential = await signInWithEmailAndPassword(
+    return await signInWithEmailAndPassword(
       auth,
       user.email,
       password
     );
-
-    return credential;
   } catch (error) {
     switch (error.code) {
       case "auth/invalid-credential":
@@ -36,7 +34,7 @@ const login = async (username, password) => {
 
       case "auth/too-many-requests":
         throw new Error(
-          "Terlalu banyak percobaan login. Silakan coba lagi beberapa saat."
+          "Terlalu banyak percobaan login. Silakan coba lagi nanti."
         );
 
       case "auth/network-request-failed":
