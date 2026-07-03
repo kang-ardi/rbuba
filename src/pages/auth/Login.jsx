@@ -1,108 +1,252 @@
-import { useState } from "react";
-import { FaSchool, FaSignInAlt } from "react-icons/fa";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { toast } from "react-toastify";
 
-import AuthLayout from "../../layouts/AuthLayout";
+import useAuth from "../../hooks/useAuth";
+import { authValidation } from "../../services";
 
 export default function Login() {
 
-  const [loading] = useState(false);
+  const navigate = useNavigate();
+
+  const { login } = useAuth();
+
+  const usernameRef = useRef(null);
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const {
+
+    register,
+
+    handleSubmit,
+
+    setError,
+
+    formState: { errors }
+
+  } = useForm({
+
+    defaultValues: {
+
+      username: "",
+
+      password: ""
+
+    }
+
+  });
+
+  useEffect(() => {
+
+    usernameRef.current?.focus();
+
+  }, []);
+
+  const onSubmit = async (data) => {
+
+    const validation = authValidation.login(data);
+
+    if (Object.keys(validation).length > 0) {
+
+      Object.entries(validation).forEach(([field, message]) => {
+
+        setError(field, {
+
+          type: "manual",
+
+          message
+
+        });
+
+      });
+
+      return;
+
+    }
+
+    try {
+
+      setLoading(true);
+
+      await login(
+
+        data.username,
+
+        data.password
+
+      );
+
+      toast.success("Login berhasil.");
+
+      navigate("/dashboard");
+
+    }
+
+    catch (error) {
+
+      toast.error(error.message);
+
+    }
+
+    finally {
+
+      setLoading(false);
+
+    }
+
+  };
 
   return (
-    <AuthLayout>
 
-      <div className="card shadow border-0 auth-card">
+    <div className="auth-page">
 
-        <div className="card-body p-4 p-md-5">
+      <div className="card auth-card">
 
-          <div className="text-center mb-4">
+        <div className="auth-header">
+          <img
+            src="/rbuba-horizontal.png"
+            alt="RBUBA"
+            className="auth-logo"
+          />
 
-            <div className="login-logo mb-3">
+          <h2 className="auth-title">
+            SIGN IN
+          </h2>
+        </div>
 
-              <FaSchool />
+        <div className="auth-body">
 
-            </div>
-
-            <h3 className="fw-bold mb-1">
-
-              Rumah Belajar
-
-            </h3>
-
-            <h4 className="fw-semibold">
-
-              Ubaidillah Bin Abdullah
-
-            </h4>
-
-            <p className="text-muted mb-0">
-
-              School Management System
-
-            </p>
-
-          </div>
-
-          <div className="alert alert-danger d-none">
-
-            Email atau password salah.
-
-          </div>
-
-          <form>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+          >
 
             <div className="mb-3">
 
-              <label className="form-label">
+              <label className="auth-label">
 
-                Email
+                Username
 
               </label>
 
               <input
-                type="email"
-                className="form-control"
-                placeholder="Masukkan email"
+
+                ref={usernameRef}
+
+                type="text"
+
+                className={`form-control auth-input ${
+                  errors.username
+                    ? "is-invalid"
+                    : ""
+                }`}
+
+                placeholder="Email / NIS / Student Code / NIP"
+
+                {...register("username")}
+
               />
+
+              {errors.username && (
+
+                <div className="auth-error">
+
+                  {errors.username.message}
+
+                </div>
+
+              )}
 
             </div>
 
             <div className="mb-4">
 
-              <label className="form-label">
+              <label className="auth-label">
 
                 Password
 
               </label>
 
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Masukkan password"
-              />
+              <div className="password-group">
+
+                <input
+
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+
+                  className={`form-control auth-input ${
+                    errors.password
+                      ? "is-invalid"
+                      : ""
+                  }`}
+
+                  placeholder="Masukkan Password"
+
+                  {...register("password")}
+
+                />
+
+                <button
+
+                  type="button"
+
+                  className="password-toggle"
+
+                  onClick={() =>
+                    setShowPassword(
+                      !showPassword
+                    )
+                  }
+
+                >
+
+                  {showPassword
+                    ? <FaEyeSlash />
+                    : <FaEye />}
+
+                </button>
+
+              </div>
+
+              {errors.password && (
+
+                <div className="auth-error">
+
+                  {errors.password.message}
+
+                </div>
+
+              )}
 
             </div>
 
             <button
+
               type="submit"
-              className="btn btn-primary w-100"
+
+              className="btn btn-primary auth-btn w-100"
+
               disabled={loading}
+
             >
 
-              {loading ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                  />
-
-                  Masuk...
-                </>
-              ) : (
-                <>
-                  <FaSignInAlt className="me-2" />
-
-                  Login
-                </>
-              )}
+              {loading
+                ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                    />
+                    Signing In...
+                  </>
+                )
+                : "Login"}
 
             </button>
 
@@ -110,14 +254,26 @@ export default function Login() {
 
         </div>
 
-        <div className="card-footer bg-white text-center small text-muted">
+        <div className="auth-footer">
 
-          © 2026 RBUBA
+          <div>
+
+            Rumah Belajar Ubaidillah Bin Abdullah
+
+          </div>
+
+          <div className="auth-version">
+
+            Version 1.0.0
+
+          </div>
 
         </div>
 
       </div>
 
-    </AuthLayout>
+    </div>
+
   );
+
 }

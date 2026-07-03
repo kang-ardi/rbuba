@@ -9,17 +9,12 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       {/* Brand */}
-      <div className="sidebar-brand text-center mb-4">
-        <FaSchool size={40} />
-
-        <small
-          className="d-block mt-2"
-          style={{ fontSize: "0.75rem", opacity: 0.75 }}
-        >
-          Rumah Belajar
-          <br />
-          Ubaidillah Bin Abdullah
-        </small>
+      <div className="sidebar-brand text-center">
+        <img
+            src="/rbuba-horizontal.png"
+            alt="RBUBA"
+            className="auth-logo"
+          />
       </div>
 
       <hr className="border-secondary" />

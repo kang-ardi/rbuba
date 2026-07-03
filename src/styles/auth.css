@@ -1,0 +1,209 @@
+/* =====================================================
+   RBUBA Authentication
+===================================================== */
+
+:root {
+    --rbuba-primary: #0d6efd;
+    --rbuba-primary-dark: #0b5ed7;
+    --rbuba-bg: #f5f7fb;
+    --rbuba-border: #dee2e6;
+    --rbuba-text: #212529;
+    --rbuba-muted: #6c757d;
+}
+
+.auth-page {
+    min-height: 100vh;
+    background: var(--rbuba-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+}
+
+.auth-card {
+
+    width: 100%;
+    max-width: 420px;
+
+    border: none;
+
+    border-radius: 18px;
+
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .08);
+
+    overflow: hidden;
+
+}
+
+.auth-header {
+
+    text-align: center;
+
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+
+}
+
+.auth-logo {
+
+    width: 75%;
+
+
+    object-fit: contain;
+
+    margin-bottom: 16px;
+
+}
+
+.auth-title {
+
+    font-size: 26px;
+
+    font-weight: 700;
+
+    color: var(--rbuba-text);
+
+    margin-top: 14px;
+
+}
+
+.auth-subtitle {
+
+    color: var(--rbuba-muted);
+
+    font-size: 15px;
+
+}
+
+.auth-body {
+
+    padding: 32px;
+
+}
+
+.auth-label {
+
+    font-weight: 600;
+
+    margin-bottom: 8px;
+
+}
+
+.auth-input {
+
+    height: 48px;
+
+    border-radius: 10px;
+
+}
+
+.auth-input:focus {
+
+    box-shadow: none;
+
+    border-color: var(--rbuba-primary);
+
+}
+
+.password-group {
+
+    position: relative;
+
+}
+
+.password-toggle {
+
+    position: absolute;
+
+    top: 50%;
+
+    right: 14px;
+
+    transform: translateY(-50%);
+
+    border: none;
+
+    background: none;
+
+    cursor: pointer;
+
+    color: #6c757d;
+
+    font-size: 20px;
+
+}
+
+.password-toggle:hover {
+
+    color: var(--rbuba-primary);
+
+}
+
+.auth-error {
+
+    color: #dc3545;
+
+    font-size: 13px;
+
+    margin-top: 6px;
+
+}
+
+.auth-btn {
+
+    height: 48px;
+
+    border-radius: 10px;
+
+    font-weight: 600;
+
+}
+
+.auth-footer {
+
+    text-align: center;
+
+    color: var(--rbuba-muted);
+
+    padding: 20px;
+
+    font-size: 13px;
+
+    border-top: 1px solid #f0f0f0;
+
+}
+
+.auth-version {
+
+    font-weight: 600;
+
+}
+
+@media (max-width:576px) {
+
+    .auth-page {
+
+        padding: 18px;
+
+    }
+
+    .auth-body {
+
+        padding: 24px;
+
+    }
+
+    .auth-title {
+
+        font-size: 22px;
+
+    }
+
+    .auth-logo {
+
+        width: 80%;
+
+
+    }
+
+}
