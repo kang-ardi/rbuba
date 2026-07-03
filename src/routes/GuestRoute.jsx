@@ -1,39 +1,31 @@
-import { Navigate, Outlet } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
+
+import PageLoader from "../components/common/PageLoader";
 
 export default function GuestRoute() {
 
   const {
     user,
-    loading
+    loading,
   } = useAuth();
 
-  // Menunggu pengecekan session Firebase
+  // Menunggu Firebase mengecek session
   if (loading) {
 
     return (
-
-      <div
-        className="d-flex justify-content-center align-items-center vh-100"
-      >
-
-        <div
-          className="spinner-border text-primary"
-          role="status"
-        >
-          <span className="visually-hidden">
-            Loading...
-          </span>
-        </div>
-
-      </div>
-
+      <PageLoader
+        message="Memverifikasi sesi..."
+      />
     );
 
   }
 
-  // Jika sudah login, jangan boleh kembali ke halaman login
+  // Sudah login
   if (user) {
 
     return (

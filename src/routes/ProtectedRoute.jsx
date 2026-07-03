@@ -1,36 +1,32 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  useLocation,
+} from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
 
-export default function ProtectedRoute() {
+import PageLoader from "../components/common/PageLoader";
+
+export default function ProtectedRoute({
+  roles = [],
+}) {
 
   const {
     user,
-    loading
+    profile,
+    loading,
   } = useAuth();
 
   const location = useLocation();
 
-  // Menunggu pengecekan session Firebase
+  // Menunggu Firebase mengecek session
   if (loading) {
 
     return (
-
-      <div
-        className="d-flex justify-content-center align-items-center vh-100"
-      >
-
-        <div
-          className="spinner-border text-primary"
-          role="status"
-        >
-          <span className="visually-hidden">
-            Loading...
-          </span>
-        </div>
-
-      </div>
-
+      <PageLoader
+        message="Memverifikasi sesi..."
+      />
     );
 
   }
@@ -42,7 +38,7 @@ export default function ProtectedRoute() {
       <Navigate
         to="/login"
         state={{
-          from: location
+          from: location,
         }}
         replace
       />
@@ -50,7 +46,38 @@ export default function ProtectedRoute() {
 
   }
 
-  // Sudah login
+  // Akun tidak aktif
+  if (!profile?.active) {
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    );
+
+  }
+
+  // Tidak ada pembatasan role
+  if (roles.length === 0) {
+
+    return <Outlet />;
+
+  }
+
+  // Role tidak diizinkan
+  if (!roles.includes(profile.role)) {
+
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
+
+  }
+
+  // Diizinkan
   return <Outlet />;
 
 }
