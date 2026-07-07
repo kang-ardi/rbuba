@@ -1,31 +1,82 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+
+import GuestRoute from "./GuestRoute";
+import ProtectedRoute from "./ProtectedRoute";
+
+/* ===========================
+   AUTH
+=========================== */
 
 import Login from "../pages/auth/Login";
+
+/* ===========================
+   DASHBOARD
+=========================== */
+
 import Dashboard from "../pages/dashboard/Dashboard";
-import StudentList from "../pages/students/StudentList";
-import PaymentList from "../pages/payments/PaymentList";
+
+/* ===========================
+   PROFILE
+=========================== */
+
 import Profile from "../pages/profile/Profile";
+
+/* ===========================
+   STUDENTS
+=========================== */
+
+import StudentList from "../pages/students/StudentList";
+
+/* ===========================
+   PAYMENTS
+=========================== */
+
+import PaymentList from "../pages/payments/PaymentList";
+
+/* ===========================
+   SYSTEM
+=========================== */
+
+import SetupWizard from "../pages/system/SetupWizard";
+
+/* ===========================
+   DEVELOPMENT
+=========================== */
 
 import TestFirebase from "../pages/TestFirebase";
 import TestAuth from "../pages/system/TestAuth";
 
-import ProtectedRoute from "./ProtectedRoute";
-import GuestRoute from "./GuestRoute";
-
 export default function AppRoutes() {
+
   return (
+
     <Routes>
 
-      {/* Default */}
+      {/* ======================================
+          DEFAULT
+      ====================================== */}
+
       <Route
         path="/"
-        element={<Navigate to="/dashboard" replace />}
+        element={
+          <Navigate
+            to="/dashboard"
+            replace
+          />
+        }
       />
 
-      {/* =========================
-          Guest Route
-      ========================== */}
-      <Route element={<GuestRoute />}>
+      {/* ======================================
+          GUEST
+      ====================================== */}
+
+      <Route
+        element={<GuestRoute />}
+      >
 
         <Route
           path="/login"
@@ -34,32 +85,98 @@ export default function AppRoutes() {
 
       </Route>
 
-      {/* =========================
-          Protected Route
-      ========================== */}
-      <Route element={<ProtectedRoute />}>
+      {/* ======================================
+          PROTECTED
+      ====================================== */}
+
+      <Route
+        element={<ProtectedRoute />}
+      >
+
+        {/* Dashboard */}
 
         <Route
           path="/dashboard"
           element={<Dashboard />}
         />
 
-        <Route
-          path="/students"
-          element={<StudentList />}
-        />
-
-        <Route
-          path="/payments"
-          element={<PaymentList />}
-        />
+        {/* Profile */}
 
         <Route
           path="/profile"
           element={<Profile />}
         />
 
-        {/* Development Only */}
+        {/* Students */}
+
+        <Route
+          path="/students"
+          element={<StudentList />}
+        />
+
+        {/* Payments */}
+
+        <Route
+          path="/payments"
+          element={<PaymentList />}
+        />
+
+        {/* Setup Wizard */}
+
+        <Route
+          path="/system/setup"
+          element={<SetupWizard />}
+        />
+
+        {/* ======================================
+            SUPERADMIN
+        ====================================== */}
+
+        <Route
+          element={
+            <ProtectedRoute
+              roles={["superadmin"]}
+            />
+          }
+        >
+
+          {/*
+          <Route
+            path="/users"
+            element={<UserList />}
+          />
+          */}
+
+        </Route>
+
+        {/* ======================================
+            SUPERADMIN + ADMIN
+        ====================================== */}
+
+        <Route
+          element={
+            <ProtectedRoute
+              roles={[
+                "superadmin",
+                "admin",
+              ]}
+            />
+          }
+        >
+
+          {/*
+          <Route
+            path="/commitments"
+            element={<CommitmentList />}
+          />
+          */}
+
+        </Route>
+
+        {/* ======================================
+            DEVELOPMENT
+        ====================================== */}
+
         <Route
           path="/test"
           element={<TestFirebase />}
@@ -72,12 +189,22 @@ export default function AppRoutes() {
 
       </Route>
 
-      {/* 404 */}
+      {/* ======================================
+          404
+      ====================================== */}
+
       <Route
         path="*"
-        element={<Navigate to="/dashboard" replace />}
+        element={
+          <Navigate
+            to="/dashboard"
+            replace
+          />
+        }
       />
 
     </Routes>
+
   );
+
 }

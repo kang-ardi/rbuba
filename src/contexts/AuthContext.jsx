@@ -12,6 +12,7 @@ import { auth } from "../firebase";
 
 import {
   authService,
+  setupService,
   userService,
 } from "../services";
 
@@ -29,67 +30,119 @@ export function AuthProvider({ children }) {
 
   const [user, setUser] = useState(null);
 
-  const [profile, setProfile] = useState(defaultProfile);
+  const [profile, setProfile] =
+    useState(defaultProfile);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
+
+  /**
+   * systemReady
+   *
+   * null    = sedang mengecek
+   * true    = database sudah diinisialisasi
+   * false   = database belum diinisialisasi
+   * error   = gagal membaca Firestore
+   */
+  const [systemReady, setSystemReady] =
+    useState(null);
+
+  /**
+   * Digunakan setelah Setup Wizard selesai.
+   * Tidak mengekspos setSystemReady secara langsung.
+   */
+  const markSystemReady = () => {
+    setSystemReady(true);
+  };
 
   useEffect(() => {
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (firebaseUser) => {
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        async (firebaseUser) => {
 
-        try {
+          setLoading(true);
 
-          if (!firebaseUser) {
+          try {
+
+            if (!firebaseUser) {
+
+              setUser(null);
+
+              setProfile(defaultProfile);
+
+              setSystemReady(null);
+
+              return;
+
+            }
+
+            setUser(firebaseUser);
+
+            const profileData =
+              await userService.getProfile(
+                firebaseUser.uid
+              );
+
+            if (profileData) {
+
+              setProfile(profileData);
+
+            } else {
+
+              setProfile({
+
+                ...defaultProfile,
+
+                uid: firebaseUser.uid,
+
+                email: firebaseUser.email,
+
+              });
+
+            }
+
+            try {
+
+              const initialized =
+                await setupService.isInitialized();
+
+              setSystemReady(initialized);
+
+            }
+
+            catch (error) {
+
+              console.error(error);
+
+              setSystemReady("error");
+
+            }
+
+          }
+
+          catch (error) {
+
+            console.error(error);
 
             setUser(null);
 
             setProfile(defaultProfile);
 
+            setSystemReady(null);
+
+          }
+
+          finally {
+
             setLoading(false);
 
-            return;
-
           }
-
-          const profileData =
-            await userService.getProfile(
-              firebaseUser.uid
-            );
-
-          setUser(firebaseUser);
-
-          if (profileData) {
-
-            setProfile(profileData);
-
-          } else {
-
-            setProfile({
-              ...defaultProfile,
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-            });
-
-          }
-
-        } catch (error) {
-
-          console.error(error);
-
-          setUser(null);
-
-          setProfile(defaultProfile);
-
-        } finally {
-
-          setLoading(false);
 
         }
 
-      }
-    );
+      );
 
     return () => unsubscribe();
 
@@ -104,6 +157,10 @@ export function AuthProvider({ children }) {
     role: profile?.role,
 
     loading,
+
+    systemReady,
+
+    markSystemReady,
 
     login: authService.login,
 

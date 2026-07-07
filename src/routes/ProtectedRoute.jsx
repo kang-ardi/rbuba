@@ -4,9 +4,11 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import PageLoader from "../components/common/PageLoader";
 import useAuth from "../hooks/useAuth";
 
-import PageLoader from "../components/common/PageLoader";
+import SystemError from "../pages/system/SystemError";
+import AccessDenied from "../pages/system/AccessDenied";
 
 export default function ProtectedRoute({
   roles = [],
@@ -16,11 +18,15 @@ export default function ProtectedRoute({
     user,
     profile,
     loading,
+    systemReady,
   } = useAuth();
 
   const location = useLocation();
 
-  // Menunggu Firebase mengecek session
+  /* ======================================
+     AUTH LOADING
+  ====================================== */
+
   if (loading) {
 
     return (
@@ -31,7 +37,10 @@ export default function ProtectedRoute({
 
   }
 
-  // Belum login
+  /* ======================================
+     BELUM LOGIN
+  ====================================== */
+
   if (!user) {
 
     return (
@@ -46,27 +55,65 @@ export default function ProtectedRoute({
 
   }
 
-  // Akun tidak aktif
-  if (!profile?.active) {
+  /* ======================================
+     SYSTEM CHECK
+  ====================================== */
+
+  if (systemReady === null) {
 
     return (
-      <Navigate
-        to="/login"
-        replace
+      <PageLoader
+        message="Memeriksa konfigurasi sistem..."
       />
     );
 
   }
 
-  // Tidak ada pembatasan role
-  if (roles.length === 0) {
+  /* ======================================
+     SYSTEM ERROR
+  ====================================== */
 
-    return <Outlet />;
+  if (systemReady === "error") {
+
+    return <SystemError />;
 
   }
 
-  // Role tidak diizinkan
-  if (!roles.includes(profile.role)) {
+  /* ======================================
+     DATABASE BELUM DISETUP
+  ====================================== */
+
+  if (!systemReady) {
+
+    if (profile?.role === "superadmin") {
+
+      if (location.pathname !== "/system/setup") {
+
+        return (
+          <Navigate
+            to="/system/setup"
+            replace
+          />
+        );
+
+      }
+
+    } else {
+
+      return <AccessDenied />;
+
+    }
+
+  }
+
+  /* ======================================
+     DATABASE SUDAH READY
+  ====================================== */
+
+  if (
+    systemReady &&
+    location.pathname === "/system/setup"
+  ) {
 
     return (
       <Navigate
@@ -77,7 +124,46 @@ export default function ProtectedRoute({
 
   }
 
-  // Diizinkan
+  /* ======================================
+     USER ACTIVE
+  ====================================== */
+
+  if (
+    profile &&
+    profile.active === false
+  ) {
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    );
+
+  }
+
+  /* ======================================
+     ROLE AUTHORIZATION
+  ====================================== */
+
+  if (
+    roles.length > 0 &&
+    !roles.includes(profile?.role)
+  ) {
+
+    return (
+      <Navigate
+        to="/system/access-denied"
+        replace
+      />
+    );
+
+  }
+
+  /* ======================================
+     ACCESS GRANTED
+  ====================================== */
+
   return <Outlet />;
 
 }
