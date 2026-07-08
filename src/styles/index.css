@@ -1,3 +1,10 @@
+:root {
+    --bg-sidebar-main: rgb(253, 119, 2);
+    --link-main:#666666;
+    --bg-link-active:#f9b576;
+    /* global scope */
+}
+
 body {
     margin: 0;
     background: #f5f6fa;
@@ -9,32 +16,30 @@ body {
 }
 
 .sidebar {
-    width: 260px;
-    background: #212529;
-    color: #fff;
-    flex-direction: column;
-    padding: 20px;
+    background: #E9CCB1;
 }
 
 .sidebar-brand {
     text-align: center;
 }
 
-.sidebar .nav-link {
-    color: #ced4da;
+.nav-link {
+    color: var(--link-main);
     border-radius: 8px;
     margin-bottom: 6px;
     transition: .2s;
 }
 
-.sidebar .nav-link:hover {
-    background: #343a40;
-    color: #fff;
+.nav-link:hover {
+    background: var(--bg-link-active);
+    box-shadow: inset 5px 5px 5px 0px rgba(215, 143, 75, 0.6);
+    color: var(--link-main);
 }
 
-.sidebar .nav-link.active {
-    background: #0d6efd;
-    color: #fff;
+.nav-link.active {
+    background: var(--bg-link-active);
+    box-shadow: inset 5px 5px 5px 0px rgba(215, 143, 75, 0.6);
+    color: var(--link-main);
 }
 
 .app-main {

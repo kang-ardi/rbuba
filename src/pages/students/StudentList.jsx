@@ -1,4 +1,4 @@
-import DashboardLayout from "../../layouts/DashboardLayout";
+import DashboardLayout from "../../layouts/MainLayout";
 import PageHeader from "../../components/common/PageHeader";
 import PagePlaceholder from "../../components/common/PagePlaceholder";
 

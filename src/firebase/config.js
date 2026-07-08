@@ -9,6 +9,13 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// ============================
+// DEBUG (sementara)
+// ============================
+console.log("API KEY =", import.meta.env.VITE_FIREBASE_API_KEY);
+console.log("ENV =", import.meta.env);
+// ============================
+
 const app = initializeApp(firebaseConfig);
 
 export default app;

@@ -43,12 +43,8 @@ import PaymentList from "../pages/payments/PaymentList";
 
 import SetupWizard from "../pages/system/SetupWizard";
 
-/* ===========================
-   DEVELOPMENT
-=========================== */
+import MainLayout from "../layouts/MainLayout";
 
-import TestFirebase from "../pages/TestFirebase";
-import TestAuth from "../pages/system/TestAuth";
 
 export default function AppRoutes() {
 
@@ -89,104 +85,87 @@ export default function AppRoutes() {
           PROTECTED
       ====================================== */}
 
-      <Route
-        element={<ProtectedRoute />}
-      >
+      <Route element={<ProtectedRoute />}>
 
-        {/* Dashboard */}
+          {/* Dashboard */}
 
-        <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
-
-        {/* Profile */}
-
-        <Route
-          path="/profile"
-          element={<Profile />}
-        />
-
-        {/* Students */}
-
-        <Route
-          path="/students"
-          element={<StudentList />}
-        />
-
-        {/* Payments */}
-
-        <Route
-          path="/payments"
-          element={<PaymentList />}
-        />
-
-        {/* Setup Wizard */}
-
-        <Route
-          path="/system/setup"
-          element={<SetupWizard />}
-        />
-
-        {/* ======================================
-            SUPERADMIN
-        ====================================== */}
-
-        <Route
-          element={
-            <ProtectedRoute
-              roles={["superadmin"]}
-            />
-          }
-        >
-
-          {/*
           <Route
-            path="/users"
-            element={<UserList />}
+            path="/dashboard"
+            element={<Dashboard />}
           />
-          */}
 
-        </Route>
+          {/* Profile */}
 
-        {/* ======================================
-            SUPERADMIN + ADMIN
-        ====================================== */}
-
-        <Route
-          element={
-            <ProtectedRoute
-              roles={[
-                "superadmin",
-                "admin",
-              ]}
-            />
-          }
-        >
-
-          {/*
           <Route
-            path="/commitments"
-            element={<CommitmentList />}
+            path="/profile"
+            element={<Profile />}
           />
-          */}
 
-        </Route>
+          {/* Students */}
 
-        {/* ======================================
-            DEVELOPMENT
-        ====================================== */}
+          <Route
+            path="/students"
+            element={<StudentList />}
+          />
 
-        <Route
-          path="/test"
-          element={<TestFirebase />}
-        />
+          {/* Payments */}
 
-        <Route
-          path="/test-auth"
-          element={<TestAuth />}
-        />
+          <Route
+            path="/payments"
+            element={<PaymentList />}
+          />
 
+          {/* Setup Wizard */}
+
+          <Route
+            path="/system/setup"
+            element={<SetupWizard />}
+          />
+
+          {/* ======================================
+              SUPERADMIN
+          ====================================== */}
+
+          <Route
+            element={
+              <ProtectedRoute
+                roles={["superadmin"]}
+              />
+            }
+          >
+
+            {/*
+            <Route
+              path="/users"
+              element={<UserList />}
+            />
+            */}
+
+          </Route>
+
+          {/* ======================================
+              SUPERADMIN + ADMIN
+          ====================================== */}
+
+          <Route
+            element={
+              <ProtectedRoute
+                roles={[
+                  "superadmin",
+                  "admin",
+                ]}
+              />
+            }
+          >
+
+            {/*
+            <Route
+              path="/commitments"
+              element={<CommitmentList />}
+            />
+            */}
+
+          </Route>
       </Route>
 
       {/* ======================================

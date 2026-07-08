@@ -1,25 +1,24 @@
+// src/constants/menu.js
+/**
+ * Tujuan     : Sumber tunggal definisi menu sidebar (path, label, icon, roles).
+ * Caller     : Sidebar.
+ * Dependensi : react-icons.
+ * Main Funcs : MENU_ITEMS (named export).
+ * Side Effect: Tidak ada.
+ */
 import {
-  FaHome,
-  FaMoneyBillWave,
-  FaUserGraduate,
-} from "react-icons/fa";
+  FiHome, FiUsers, FiUser, FiCreditCard, FiSettings,
+} from "react-icons/fi";
 
-const menus = [
+export const MENU_ITEMS = [
+  { path: "/dashboard", label: "Dashboard", icon: FiHome },
+  { path: "/students",  label: "Siswa",     icon: FiUsers },
+  { path: "/payments",  label: "Pembayaran", icon: FiCreditCard },
+  { path: "/profile",   label: "Profil",    icon: FiUser },
   {
-    title: "Dashboard",
-    path: "/dashboard",
-    icon: FaHome,
-  },
-  {
-    title: "Data Siswa",
-    path: "/students",
-    icon: FaUserGraduate,
-  },
-  {
-    title: "Pembayaran",
-    path: "/payments",
-    icon: FaMoneyBillWave,
+    path: "/system/setup",
+    label: "Setup Sistem",
+    icon: FiSettings,
+    roles: ["superadmin"],
   },
 ];
-
-export default menus;
