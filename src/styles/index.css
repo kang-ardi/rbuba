@@ -73,6 +73,10 @@ body {
     border-radius: 8px;
 }
 
+.breadcrumb{
+    font-size: small;
+}
+
 /* ==========================
    AUTH
 ========================== */

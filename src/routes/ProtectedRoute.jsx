@@ -153,7 +153,7 @@ export default function ProtectedRoute({
 
     return (
       <Navigate
-        to="/system/access-denied"
+        to="/403"
         replace
       />
     );

@@ -42,8 +42,9 @@ import PaymentList from "../pages/payments/PaymentList";
 =========================== */
 
 import SetupWizard from "../pages/system/SetupWizard";
-
 import MainLayout from "../layouts/MainLayout";
+import NotFound from "../pages/errors/NotFound";
+import Forbidden from "../pages/errors/Forbidden";
 
 
 export default function AppRoutes() {
@@ -78,6 +79,9 @@ export default function AppRoutes() {
           path="/login"
           element={<Login />}
         />
+
+        {/* Tambah rute publik (di luar guard) */}
+        <Route path="/403" element={<Forbidden />} />
 
       </Route>
 
@@ -174,12 +178,7 @@ export default function AppRoutes() {
 
       <Route
         path="*"
-        element={
-          <Navigate
-            to="/dashboard"
-            replace
-          />
-        }
+        element={<NotFound />}
       />
 
     </Routes>

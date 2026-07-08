@@ -13,6 +13,8 @@ import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import Footer from "../components/layout/Footer";
 
+import Breadcrumb from "../components/layout/Breadcrumb";
+
 const MOBILE_BREAKPOINT = 992; // Bootstrap lg
 
 export default function MainLayout() {
@@ -70,6 +72,7 @@ export default function MainLayout() {
       <div className="d-flex flex-column flex-grow-1 min-w-0">
         <Header onToggleSidebar={handleToggle} />
         <main className="flex-grow-1 p-3 bg-light">
+          <Breadcrumb />
           <Outlet />
         </main>
         <Footer />
