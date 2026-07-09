@@ -6,21 +6,52 @@ import {
 import { auth } from "../../firebase";
 import { userService } from "../index";
 
+const normalizeLoginKey = (value) => {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+};
+
+const isEmail = (value) => {
+  return normalizeLoginKey(value).includes("@");
+};
+
 const login = async (username, password) => {
   try {
-    const user = await userService.findByUsername(username);
+    const loginKey =
+      normalizeLoginKey(username);
 
-    if (!user) {
-      throw new Error("Username tidak ditemukan.");
+    if (!loginKey) {
+      throw new Error("Username wajib diisi.");
     }
 
-    if (!user.active) {
-      throw new Error("Akun telah dinonaktifkan.");
+    let email = null;
+
+    const loginUser =
+      await userService.findByUsername(loginKey);
+
+    if (loginUser) {
+      if (!loginUser.active) {
+        throw new Error("Akun telah dinonaktifkan.");
+      }
+
+      email = loginUser.email;
+    } else {
+      /*
+        Fallback untuk kondisi Firestore kosong:
+        login pertama menggunakan email Firebase Auth
+        sebelum collection loginKeys terbentuk.
+      */
+      if (!isEmail(loginKey)) {
+        throw new Error("Username tidak ditemukan.");
+      }
+
+      email = loginKey;
     }
 
     return await signInWithEmailAndPassword(
       auth,
-      user.email,
+      email,
       password
     );
   } catch (error) {
@@ -40,6 +71,11 @@ const login = async (username, password) => {
       case "auth/network-request-failed":
         throw new Error(
           "Tidak dapat terhubung ke internet."
+        );
+
+      case "permission-denied":
+        throw new Error(
+          "Akses login ditolak. Periksa Firestore Rules dan collection loginKeys."
         );
 
       default:

@@ -1,0 +1,438 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() &&
+        request.auth.uid == userId;
+    }
+
+    function isBootstrapMode() {
+      return isAuthenticated() &&
+        !exists(
+          /databases/$(database)/documents/settings/system
+        );
+    }
+
+    function currentUserPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function currentUserExists() {
+      return isAuthenticated() &&
+        exists(currentUserPath());
+    }
+
+    function currentUserDoc() {
+      return get(currentUserPath());
+    }
+
+    function isSuperadmin() {
+      return currentUserExists() &&
+        currentUserDoc().data.role == "superadmin" &&
+        currentUserDoc().data.active == true;
+    }
+
+    function isAdmin() {
+      return currentUserExists() &&
+        currentUserDoc().data.role in [
+          "admin",
+          "superadmin"
+        ] &&
+        currentUserDoc().data.active == true;
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 254 &&
+        email.matches(
+          "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        );
+    }
+
+    function isStringInRange(value, min, max) {
+      return value is string &&
+        value.size() >= min &&
+        value.size() <= max;
+    }
+
+    function isOptionalStringOrNull(value, max) {
+      return value == null ||
+        (
+          value is string &&
+          value.size() <= max
+        );
+    }
+
+    function isKnownRole(role) {
+      return role in [
+        "superadmin",
+        "admin",
+        "student"
+      ];
+    }
+
+    function isValidLoginKeyValue(key) {
+      return key is string &&
+        key.size() >= 3 &&
+        key.size() <= 254 &&
+        key.matches("^[a-z0-9._@+-]+$");
+    }
+
+    function validLoginKeys(keys) {
+      return keys is list &&
+        keys.size() >= 1 &&
+        keys.size() <= 5 &&
+        isValidLoginKeyValue(keys[0]) &&
+        (
+          keys.size() < 2 ||
+          isValidLoginKeyValue(keys[1])
+        ) &&
+        (
+          keys.size() < 3 ||
+          isValidLoginKeyValue(keys[2])
+        ) &&
+        (
+          keys.size() < 4 ||
+          isValidLoginKeyValue(keys[3])
+        ) &&
+        (
+          keys.size() < 5 ||
+          isValidLoginKeyValue(keys[4])
+        );
+    }
+
+    function hasValidOptionalUsername(data) {
+      return !data.keys().hasAny(["username"]) ||
+        (
+          data.username is string &&
+          data.username.size() >= 3 &&
+          data.username.size() <= 50 &&
+          data.username.matches("^[A-Z0-9._-]+$")
+        );
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasOnly([
+          "uid",
+          "username",
+          "name",
+          "email",
+          "role",
+          "active",
+          "loginKeys",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.keys().hasAll([
+          "uid",
+          "username",
+          "name",
+          "email",
+          "role",
+          "active",
+          "loginKeys",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.uid is string &&
+        data.uid.size() >= 1 &&
+        data.uid.size() <= 128 &&
+        hasValidOptionalUsername(data) &&
+        isStringInRange(data.name, 1, 100) &&
+        isValidEmail(data.email) &&
+        isKnownRole(data.role) &&
+        data.active is bool &&
+        validLoginKeys(data.loginKeys) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function userCreatedAtUnchanged() {
+      return request.resource.data.createdAt ==
+        resource.data.createdAt;
+    }
+
+    function userPrivilegeFieldsUnchanged() {
+      return request.resource.data.role ==
+        resource.data.role &&
+        request.resource.data.email ==
+        resource.data.email &&
+        request.resource.data.loginKeys ==
+        resource.data.loginKeys;
+    }
+
+    function isValidLoginKey(data) {
+      return data.keys().hasOnly([
+          "uid",
+          "email",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.keys().hasAll([
+          "uid",
+          "email",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.uid is string &&
+        data.uid.size() >= 1 &&
+        data.uid.size() <= 128 &&
+        isValidEmail(data.email) &&
+        data.active is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function loginKeyCreatedAtUnchanged() {
+      return request.resource.data.createdAt ==
+        resource.data.createdAt;
+    }
+
+    function isValidSystemSettings(data) {
+      return data.keys().hasOnly([
+          "initialized",
+          "schoolName",
+          "version",
+          "timezone",
+          "locale",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.keys().hasAll([
+          "initialized",
+          "schoolName",
+          "version",
+          "timezone",
+          "locale",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.initialized is bool &&
+        isStringInRange(data.schoolName, 1, 150) &&
+        isStringInRange(data.version, 1, 30) &&
+        isStringInRange(data.timezone, 1, 60) &&
+        isStringInRange(data.locale, 1, 20) &&
+        data.currency is string &&
+        data.currency.size() == 3 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function systemCreatedAtUnchanged() {
+      return request.resource.data.createdAt ==
+        resource.data.createdAt;
+    }
+
+    function isValidCounter(counterId, data) {
+      return data.keys().hasOnly([
+          "code",
+          "prefix",
+          "sequence",
+          "digits",
+          "yearlyReset",
+          "currentYear",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.keys().hasAll([
+          "code",
+          "prefix",
+          "sequence",
+          "digits",
+          "yearlyReset",
+          "currentYear",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.code == counterId &&
+        isStringInRange(data.prefix, 1, 10) &&
+        data.sequence is int &&
+        data.sequence >= 0 &&
+        data.sequence <= 999999999 &&
+        data.digits is int &&
+        data.digits >= 1 &&
+        data.digits <= 12 &&
+        data.yearlyReset is bool &&
+        (
+          data.currentYear == null ||
+          (
+            data.currentYear is int &&
+            data.currentYear >= 2000 &&
+            data.currentYear <= 2100
+          )
+        ) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function counterCreatedAtUnchanged() {
+      return request.resource.data.createdAt ==
+        resource.data.createdAt;
+    }
+
+    function isValidLog(data) {
+      return data.keys().hasOnly([
+          "action",
+          "actorUid",
+          "actorName",
+          "module",
+          "description",
+          "createdAt"
+        ]) &&
+        data.keys().hasAll([
+          "action",
+          "actorUid",
+          "actorName",
+          "module",
+          "description",
+          "createdAt"
+        ]) &&
+        isStringInRange(data.action, 1, 80) &&
+        isOptionalStringOrNull(data.actorUid, 128) &&
+        isStringInRange(data.actorName, 1, 100) &&
+        isStringInRange(data.module, 1, 50) &&
+        isStringInRange(data.description, 1, 500) &&
+        data.createdAt is timestamp;
+    }
+
+    match /loginKeys/{key} {
+      allow get: if true;
+      allow list: if false;
+
+      allow create: if isValidLoginKey(request.resource.data) &&
+        (
+          isSuperadmin() ||
+          (
+            isBootstrapMode() &&
+            request.resource.data.uid ==
+              request.auth.uid
+          )
+        );
+
+      allow update: if isValidLoginKey(request.resource.data) &&
+        isSuperadmin() &&
+        loginKeyCreatedAtUnchanged() &&
+        request.resource.data.uid ==
+          resource.data.uid &&
+        request.resource.data.email ==
+          resource.data.email;
+
+      allow delete: if false;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) ||
+        isSuperadmin();
+
+      allow create: if isValidUser(request.resource.data) &&
+        (
+          isSuperadmin() ||
+          (
+            isBootstrapMode() &&
+            isOwner(userId) &&
+            request.resource.data.uid ==
+              request.auth.uid &&
+            request.resource.data.role ==
+              "superadmin" &&
+            request.resource.data.active == true
+          )
+        );
+
+      allow update: if isValidUser(request.resource.data) &&
+        userCreatedAtUnchanged() &&
+        (
+          isSuperadmin() ||
+          (
+            isOwner(userId) &&
+            userPrivilegeFieldsUnchanged() &&
+            request.resource.data.active ==
+              resource.data.active
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+
+      allow create: if settingId == "system" &&
+        isValidSystemSettings(request.resource.data) &&
+        (
+          isSuperadmin() ||
+          isBootstrapMode()
+        );
+
+      allow update: if settingId == "system" &&
+        isSuperadmin() &&
+        isValidSystemSettings(request.resource.data) &&
+        systemCreatedAtUnchanged();
+
+      allow delete: if false;
+    }
+
+    match /counters/{counterId} {
+      allow read: if isSuperadmin();
+
+      allow create: if isValidCounter(
+          counterId,
+          request.resource.data
+        ) &&
+        (
+          isSuperadmin() ||
+          isBootstrapMode()
+        );
+
+      allow update: if isSuperadmin() &&
+        isValidCounter(
+          counterId,
+          request.resource.data
+        ) &&
+        counterCreatedAtUnchanged();
+
+      allow delete: if false;
+    }
+
+    match /logs/{logId} {
+      allow read: if isSuperadmin();
+
+      allow create: if isValidLog(request.resource.data) &&
+        (
+          isSuperadmin() ||
+          isBootstrapMode()
+        );
+
+      allow update, delete: if false;
+    }
+
+    match /students/{studentId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /employees/{employeeId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /commitments/{commitmentId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

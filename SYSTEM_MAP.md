@@ -1,64 +1,87 @@
 # SYSTEM_MAP.md — RBUBA
 > Kompas arsitektur proyek. Baca file ini di awal setiap sesi. Update jika flow/file utama berubah.
-> Terakhir diperbarui: 2026-07-08 | Status: Sprint 3 (System Initialization) — Step 6 Testing
+> Terakhir diperbarui: 2026-07-08 | Status: Sprint 4 (Main Application UI) — Task 1–8 selesai (menunggu verifikasi Freeze UI)
 
 ---
 
 ## 1. Project Summary
-- **Tujuan Aplikasi**: Sistem manajemen sekolah (RBUBA) — mencakup manajemen user, siswa, pegawai, komitmen pembayaran, pembayaran, dashboard KPI, laporan, dan audit trail. (Ref: Flow Build System RBUBA.docx)
-- **Tech Stack**: React 19, Vite 7, Bootstrap 5.3 (via npm import), Firebase 12 (Auth + Firestore + Hosting), React Router DOM 7, React Hook Form 7, React Toastify 11, React Icons 5.
-- **Arsitektur**: Standard Vite structure + folder-based layering (`components / pages / routes / services / contexts / hooks / firebase / utils`). Pola: UI (Pages) -> Hooks/Context -> Service Layer -> Firebase SDK (Firestore/Auth).
+- **Tujuan Aplikasi**: Sistem manajemen sekolah (RBUBA) — manajemen user, siswa, pegawai, komitmen pembayaran, pembayaran, dashboard KPI, laporan, audit trail. (Ref: Flow Build System RBUBA.docx)
+- **Tech Stack**: React 19, Vite 7, Bootstrap 5.3 (npm import), Firebase 12 (Auth + Firestore + Hosting), React Router DOM 7, React Hook Form 7, React Toastify 11, React Icons 5.
+- **Arsitektur**: Standard Vite + folder-based layering (`components / pages / routes / services / contexts / hooks / firebase / layouts / constants / utils`). Pola: UI (Pages) -> Hooks/Context -> Service Layer -> Firebase SDK.
 
 ---
 
 ## 2. Core Component Flow
 
 ### Entry Chain
-`index.html` -> `src/main.jsx` (BrowserRouter + AuthProvider + ToastContainer + import CSS Bootstrap/Toastify/custom) -> `src/App.jsx` -> `src/routes/AppRoutes.jsx`
+`index.html` -> `src/main.jsx` (ErrorBoundary > BrowserRouter > AuthProvider > LoadingProvider > App + ToastContainer; import CSS Bootstrap/Toastify/custom) -> `src/App.jsx` -> `src/routes/AppRoutes.jsx`
 
 ### Auth Flow
-- Buka `/login` -> `GuestRoute` (cek `useAuth`: loading -> PageLoader; user ada -> redirect `/dashboard`) -> `pages/auth/Login` -> auth service (`services/`) -> Firebase Auth (`firebase/auth.js`).
-- Session: `AuthContext` (contexts/) memantau Firebase session -> auto login/logout -> role: superadmin | admin | student.
+- `/login` -> `GuestRoute` (loading -> PageLoader; user ada -> redirect /dashboard) -> `pages/auth/Login` -> authService -> Firebase Auth.
+- Session: `AuthContext` memantau Firebase session -> auto login/logout -> role: superadmin | admin | student.
 
-### Protected Flow
-- Route terproteksi -> `ProtectedRoute` (routes/) -> `useAuth` -> render `Outlet` atau redirect login.
-- Role-based nesting: `ProtectedRoute roles={["superadmin"]}` (untuk /users — belum aktif), `roles={["superadmin","admin"]}` (untuk /commitments — belum aktif).
+### Protected + Layout Flow
+- Rute protected: `ProtectedRoute` (cek login + role; role tak cocok -> redirect `/403`) -> `MainLayout` (layout route, render sekali) -> `Outlet` (page).
+- MainLayout: state `collapsed` (persist di localStorage key `sidebar-collapsed`), `mobileOpen`, deteksi `isMobile` (<992px, listener resize), auto-close sidebar mobile saat pindah halaman, backdrop overlay mobile.
+
+### Sidebar Behavior (frozen)
+- Desktop: collapse smooth 240px <-> 64px; hover-expand saat collapsed; `suppressHover` (ref) mencegah re-expand setelah klik menu sampai pointer keluar.
+- Mobile: hidden total (`return null`) sampai hamburger diklik -> overlay fixed + backdrop.
+- Menu role-based dari `constants/menu.js` (MENU_ITEMS: path, label, icon, roles?).
+
+### Global Loading Flow
+Page/service -> `useLoading().withLoading(task)` -> `LoadingContext` (counter, aman paralel) -> overlay fullscreen spinner.
+
+### Error Flow
+- URL tak dikenal -> `*` -> `pages/errors/NotFound` (404).
+- Role tak sesuai -> `/403` -> `Forbidden`.
+- Crash render React -> `ErrorBoundary` (main.jsx) -> `ServerError` (500).
 
 ### Setup Wizard Flow (Sprint 3)
-`/system/setup` -> `pages/system/SetupWizard` -> `setupService` + `counterService` (services/ & counters/) -> Firestore (inisialisasi collection, counter, log).
+`/system/setup` -> `pages/system/SetupWizard` -> `setupService` + `counterService` -> Firestore (init collection, counter, log).
 
 ### Rute Aktif (AppRoutes.jsx)
 | Path | Guard | Page |
 |---|---|---|
 | `/` | - | Redirect -> /dashboard |
 | `/login` | GuestRoute | pages/auth/Login |
-| `/dashboard` | ProtectedRoute | pages/dashboard/Dashboard |
-| `/profile` | ProtectedRoute | pages/profile/Profile |
-| `/students` | ProtectedRoute | pages/students/StudentList |
-| `/payments` | ProtectedRoute | pages/payments/PaymentList |
-| `/system/setup` | ProtectedRoute | pages/system/SetupWizard |
-| `*` | - | Redirect -> /dashboard |
+| `/dashboard` | ProtectedRoute + MainLayout | pages/dashboard/Dashboard |
+| `/profile` | ProtectedRoute + MainLayout | pages/profile/Profile |
+| `/students` | ProtectedRoute + MainLayout | pages/students/StudentList |
+| `/payments` | ProtectedRoute + MainLayout | pages/payments/PaymentList |
+| `/system/setup` | ProtectedRoute + MainLayout | pages/system/SetupWizard |
+| `/403` | - | pages/errors/Forbidden |
+| `*` | - | pages/errors/NotFound |
 
 ---
 
 ## 3. Clean Tree (src/)
 ```
 src/
-├── assets/        # Aset statis
-├── components/    # Komponen reusable (a.l. common/PageLoader)
-├── constants/     # Konstanta aplikasi
-├── contexts/      # AuthContext (global auth state)
-├── counters/      # Logika counter (Setup Wizard / nomor dokumen)
-├── firebase/      # Init Firebase: config.js, auth.js, firestore.js, index.js
-├── hooks/         # Custom hooks (useAuth)
-├── layouts/       # Layout dasar (MainLayout — Sprint 4)
-├── pages/         # auth/Login, dashboard/, profile/, students/, payments/, system/SetupWizard
-├── routes/        # AppRoutes, ProtectedRoute, GuestRoute
-├── services/      # Service layer (authService, setupService, counterService)
-├── styles/        # index.css, auth.css
-├── utils/         # Helper umum
-├── App.jsx        # Root component -> AppRoutes
-└── main.jsx       # Entrypoint: Router, AuthProvider, Toast, CSS imports
+├── assets/
+├── components/
+│   ├── common/        # PageLoader, EmptyState, ErrorBoundary
+│   └── layout/        # Header, Sidebar, Footer, Breadcrumb (FROZEN)
+├── constants/         # menu.js, breadcrumb.js
+├── contexts/          # AuthContext, LoadingContext
+├── counters/          # Logika counter (Setup Wizard / nomor dokumen)
+├── firebase/          # config.js, auth.js, firestore.js, index.js
+├── hooks/             # useAuth, useLoading
+├── layouts/           # MainLayout (FROZEN)
+├── pages/
+│   ├── auth/          # Login
+│   ├── dashboard/     # Dashboard
+│   ├── errors/        # ErrorPage, NotFound, Forbidden, ServerError
+│   ├── payments/      # PaymentList
+│   ├── profile/       # Profile
+│   ├── students/      # StudentList
+│   └── system/        # SetupWizard
+├── routes/            # AppRoutes, ProtectedRoute, GuestRoute
+├── services/          # authService, setupService, counterService
+├── styles/            # index.css, auth.css
+├── utils/
+├── App.jsx
+└── main.jsx
 ```
 
 ---
@@ -66,63 +89,85 @@ src/
 ## 4. Module Map (The Chapters)
 
 ### Entry & Root
-- `src/main.jsx`: Bootstrap aplikasi — mount React, BrowserRouter, AuthProvider, ToastContainer, import Bootstrap CSS+JS bundle.
-- `src/App.jsx`: Root component tipis; hanya merender AppRoutes.
-- `vite.config.js`: Konfigurasi Vite minimal (plugin react, base "/").
+- `src/main.jsx`: Mount React — ErrorBoundary, BrowserRouter, AuthProvider, LoadingProvider, ToastContainer, import Bootstrap CSS+JS bundle.
+- `src/App.jsx`: Root tipis; merender AppRoutes.
+- `vite.config.js`: Konfigurasi minimal (plugin react, base "/").
 
 ### Routing
-- `src/routes/AppRoutes.jsx`: Definisi seluruh rute + guard nesting (guest/protected/role-based); rute /users & /commitments masih dikomentari.
-- `src/routes/GuestRoute.jsx`: Guard untuk tamu; loading -> PageLoader, sudah login -> redirect /dashboard, belum -> Outlet.
-- `src/routes/ProtectedRoute.jsx`: Guard login + role (menerima prop `roles`). *(File belum diupload — dipetakan dari pemakaian)*
+- `routes/AppRoutes.jsx`: Definisi rute + guard nesting; MainLayout sebagai layout route; 404/403; /users & /commitments masih dikomentari.
+- `routes/GuestRoute.jsx`: Guard tamu; loading -> PageLoader; sudah login -> /dashboard.
+- `routes/ProtectedRoute.jsx`: Guard login + role (prop `roles`); role tak cocok -> /403. *(dipetakan dari pemakaian)*
+
+### Layout (FROZEN — ubah via constants/props saja)
+- `layouts/MainLayout.jsx`: Layout responsif; state collapsed (localStorage), mobileOpen, isMobile; backdrop mobile; Breadcrumb + Outlet di main.
+- `components/layout/Header.jsx`: Toggle sidebar, brand, dropdown profil (Bootstrap dropdown), logout via useAuth.
+- `components/layout/Sidebar.jsx`: Menu role-based, collapse smooth + hover-expand (suppressHover ref), mobile hidden total.
+- `components/layout/Footer.jsx`: Footer statis.
+- `components/layout/Breadcrumb.jsx`: Breadcrumb otomatis dari URL; segmen tanpa halaman = non-link (LINKABLE_PATHS).
+
+### Common Components
+- `components/common/PageLoader.jsx`: Loading verifikasi sesi.
+- `components/common/EmptyState.jsx`: Tampilan data kosong reusable (props: icon, title, message, actionLabel, onAction).
+- `components/common/ErrorBoundary.jsx`: Class component penangkap crash render -> ServerError.
+
+### Error Pages
+- `pages/errors/ErrorPage.jsx`: Template dasar (code, title, message, icon).
+- `pages/errors/NotFound.jsx` (404), `Forbidden.jsx` (403), `ServerError.jsx` (500).
 
 ### Firebase Layer
-- `src/firebase/config.js`: initializeApp dari env VITE_FIREBASE_*. ⚠ Ada console.log debug API key & env — hapus sebelum production.
-- `src/firebase/auth.js`: Ekspor instance `getAuth(app)`.
-- `src/firebase/firestore.js`: Ekspor instance `getFirestore(app)` sebagai `db`.
-- `src/firebase/index.js`: Barrel export `{ app, auth, db }`.
+- `firebase/config.js`: initializeApp dari env VITE_FIREBASE_*. ⚠ console.log debug API key — hapus sebelum production.
+- `firebase/auth.js`: instance getAuth. | `firebase/firestore.js`: instance getFirestore (db). | `firebase/index.js`: barrel export { app, auth, db }.
 
 ### State & Hooks
-- `src/contexts/AuthContext.jsx`: Provider auth global — user, loading, role, session listener Firebase. *(Belum diupload — dipetakan dari pemakaian)*
-- `src/hooks/useAuth.js`: Hook konsumsi AuthContext — mengembalikan `{ user, loading, ... }`.
+- `contexts/AuthContext.jsx`: user, loading, role, logout, session listener. *(dipetakan dari pemakaian)*
+- `contexts/LoadingContext.jsx`: Global loading (counter) + overlay fullscreen.
+- `hooks/useAuth.js`: Konsumsi AuthContext.
+- `hooks/useLoading.js`: Konsumsi LoadingContext + helper `withLoading(task)` (auto on/off, aman error).
+
+### Constants
+- `constants/menu.js`: MENU_ITEMS sidebar (path, label, icon, roles?).
+- `constants/breadcrumb.js`: BREADCRUMB_LABELS (path->label) + LINKABLE_PATHS.
 
 ### Services (dari blueprint)
-- `services/authService`: login/logout via Firebase Auth.
-- `services/setupService`: inisialisasi sistem/collection (Setup Wizard).
-- `services/counterService` (+ `counters/`): pengelolaan counter dokumen di Firestore.
+- `services/authService`: login/logout Firebase Auth.
+- `services/setupService`: inisialisasi sistem (Setup Wizard).
+- `services/counterService` (+ `counters/`): counter dokumen Firestore.
 
 ### Pages
-- `pages/auth/Login.jsx`: Form login (React Hook Form, validasi, toast, show password).
-- `pages/dashboard/Dashboard.jsx`: Halaman utama pasca-login (KPI — Sprint 10).
-- `pages/profile/Profile.jsx`: Profil user.
-- `pages/students/StudentList.jsx`: Daftar siswa (Sprint 6).
-- `pages/payments/PaymentList.jsx`: Daftar pembayaran (Sprint 9).
-- `pages/system/SetupWizard.jsx`: Wizard inisialisasi sistem (Sprint 3).
-
-### Components
-- `components/common/PageLoader.jsx`: Indikator loading saat verifikasi sesi.
+- `pages/auth/Login.jsx`: Form login (RHF, validasi, toast, show password).
+- `pages/dashboard/Dashboard.jsx`: Halaman utama (KPI — Sprint 10).
+- `pages/profile/Profile.jsx`, `pages/students/StudentList.jsx`, `pages/payments/PaymentList.jsx`, `pages/system/SetupWizard.jsx`.
 
 ---
 
 ## 5. Styling & UI Context
-- **Bootstrap**: di-import via npm di `main.jsx` (`bootstrap.min.css` + `bootstrap.bundle.min.js`). Bukan CDN, bukan SCSS kustom.
-- **CSS kustom**: `src/styles/index.css`, `src/styles/auth.css`.
-- **Toastify CSS**: di-import di `main.jsx`; ToastContainer global (top-right, autoClose 3s, theme colored).
-- **Komponen Bootstrap utama**: Grid system, Form controls (Login), diperkirakan Navbar/Sidebar/Modal menyusul di Sprint 4. Detail pemakaian per-page: Not found (file page belum dianalisis).
+- **Bootstrap**: npm import di `main.jsx` (CSS + JS bundle). Bukan CDN/SCSS.
+- **CSS kustom**: `styles/index.css`, `styles/auth.css`.
+- **Toastify**: ToastContainer global (top-right, 3s, colored).
+- **Komponen Bootstrap dipakai**: Grid/flex utilities, Navbar (Header), Dropdown (profil), Breadcrumb, Spinner (loading), Buttons, Forms (Login).
+- **Animasi kustom**: transisi width sidebar (cubic-bezier) + fade label (inline style).
 
 ---
 
 ## 6. Data & Config
-- **Env**: `.env`, `.env.example`, `.env.development`, `.env.production` di root — variabel `VITE_FIREBASE_*` (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId).
-- **vite.config.js**: root proyek, konfigurasi minimal.
-- **Global State**: `AuthContext` (user, loading, role). State lain: Not found.
-- **Integrasi eksternal**: Firebase Auth & Firestore via SDK (bukan Axios/REST). Pemanggil: service layer (`services/`) dan `AuthContext`.
-- **Firestore Collections (blueprint)**: `users`, `students`, `employees`, `commitments`, `payments`, `logs`, + counter/setup collection (Sprint 3).
+- **Env**: `.env*` di root — `VITE_FIREBASE_*` (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId).
+- **Persistensi klien**: localStorage `sidebar-collapsed` ("0"/"1").
+- **Global State**: AuthContext (user/role/loading), LoadingContext (isLoading).
+- **Integrasi eksternal**: Firebase Auth & Firestore via SDK (bukan REST/Axios). Pemanggil: services + AuthContext.
+- **Firestore Collections (blueprint)**: `users`, `students`, `employees`, `commitments`, `payments`, `logs`, + setup/counter (Sprint 3).
 
 ---
 
 ## 7. Risks / Blind Spots
-- ⚠ `firebase/config.js` mencetak API key & seluruh env ke console (debug) — wajib dihapus sebelum deploy.
-- File belum terverifikasi langsung (dipetakan dari pemakaian/blueprint): `ProtectedRoute.jsx`, `AuthContext.jsx`, `useAuth.js`, semua `pages/*`, `services/*`, `counters/*`, `layouts/*`, `constants/*`, `utils/*`, `index.html`.
-- Firestore structure final (nama field, security rules) belum terdokumentasi di repo — hanya di docx blueprint.
-- Rute role-based (/users, /commitments) masih dikomentari — pastikan diaktifkan saat Sprint 5 & 8.
-- Sprint 3 Step 6 (testing end-to-end Setup Wizard: counter, log, redirect, error handling) belum selesai.
+- ⚠ `firebase/config.js` masih mencetak API key & env ke console — wajib dihapus sebelum deploy.
+- ⚠ Terindikasi **MainLayout remount saat navigasi** (state reset) — dimitigasi dengan localStorage `sidebar-collapsed`, tapi akar masalah struktur route belum diverifikasi. Cek jika state layout lain ikut reset.
+- File dipetakan dari pemakaian/blueprint (belum diverifikasi langsung): `ProtectedRoute.jsx`, `AuthContext.jsx`, `useAuth.js`, isi `pages/*` (kecuali errors), `services/*`, `counters/*`, `utils/*`, `index.html`.
+- Sprint 3 Step 6 (testing end-to-end Setup Wizard) belum dinyatakan selesai.
+- Rute role-based (/users, /commitments) masih dikomentari — aktifkan di Sprint 5 & 8.
+- Firestore security rules belum terdokumentasi di repo.
+
+---
+
+## 8. Log Perubahan Peta
+- 2026-07-08: Sprint 4 Task 1–8 — tambah MainLayout, Header, Sidebar, Footer, Breadcrumb, menu.js, breadcrumb.js, LoadingContext, useLoading, EmptyState, ErrorBoundary, pages/errors/*; AppRoutes: layout route + 404/403; layout components FROZEN.
+- 2026-07-08 (awal): Peta pertama dibuat (Sprint 1–3).

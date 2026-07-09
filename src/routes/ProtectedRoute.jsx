@@ -8,12 +8,10 @@ import PageLoader from "../components/common/PageLoader";
 import useAuth from "../hooks/useAuth";
 
 import SystemError from "../pages/system/SystemError";
-import AccessDenied from "../pages/system/AccessDenied";
 
 export default function ProtectedRoute({
   roles = [],
 }) {
-
   const {
     user,
     profile,
@@ -23,147 +21,90 @@ export default function ProtectedRoute({
 
   const location = useLocation();
 
-  /* ======================================
-     AUTH LOADING
-  ====================================== */
-
   if (loading) {
-
     return (
-      <PageLoader
-        message="Memverifikasi sesi..."
-      />
+      <PageLoader message="Memverifikasi sesi..." />
     );
-
   }
 
-  /* ======================================
-     BELUM LOGIN
-  ====================================== */
-
   if (!user) {
-
     return (
       <Navigate
         to="/login"
-        state={{
-          from: location,
-        }}
+        state={{ from: location }}
         replace
       />
     );
-
   }
-
-  /* ======================================
-     SYSTEM CHECK
-  ====================================== */
 
   if (systemReady === null) {
-
     return (
-      <PageLoader
-        message="Memeriksa konfigurasi sistem..."
-      />
+      <PageLoader message="Memeriksa konfigurasi sistem..." />
     );
-
   }
-
-  /* ======================================
-     SYSTEM ERROR
-  ====================================== */
 
   if (systemReady === "error") {
-
     return <SystemError />;
-
   }
 
-  /* ======================================
-     DATABASE BELUM DISETUP
-  ====================================== */
-
-  if (!systemReady) {
-
-    if (profile?.role === "superadmin") {
-
-      if (location.pathname !== "/system/setup") {
-
-        return (
-          <Navigate
-            to="/system/setup"
-            replace
-          />
-        );
-
-      }
-
-    } else {
-
-      return <AccessDenied />;
-
+  /*
+    Database belum diinisialisasi.
+    User yang sudah berhasil login via Firebase Auth
+    harus boleh masuk ke Setup Wizard meskipun profile.role
+    masih null, karena collection users belum terbentuk.
+  */
+  if (systemReady === false) {
+    if (location.pathname !== "/system/setup") {
+      return (
+        <Navigate
+          to="/system/setup"
+          replace
+        />
+      );
     }
 
+    return <Outlet />;
   }
 
-  /* ======================================
-     DATABASE SUDAH READY
-  ====================================== */
-
+  /*
+    Database sudah ready.
+    Setup Wizard tidak boleh dibuka ulang.
+  */
   if (
-    systemReady &&
+    systemReady === true &&
     location.pathname === "/system/setup"
   ) {
-
     return (
       <Navigate
         to="/dashboard"
         replace
       />
     );
-
   }
-
-  /* ======================================
-     USER ACTIVE
-  ====================================== */
 
   if (
     profile &&
     profile.active === false
   ) {
-
     return (
       <Navigate
         to="/login"
         replace
       />
     );
-
   }
-
-  /* ======================================
-     ROLE AUTHORIZATION
-  ====================================== */
 
   if (
     roles.length > 0 &&
     !roles.includes(profile?.role)
   ) {
-
     return (
       <Navigate
         to="/403"
         replace
       />
     );
-
   }
 
-  /* ======================================
-     ACCESS GRANTED
-  ====================================== */
-
   return <Outlet />;
-
 }

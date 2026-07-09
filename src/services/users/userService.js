@@ -1,32 +1,42 @@
 import {
-  collection,
   doc,
   getDoc,
-  getDocs,
-  query,
-  where,
 } from "firebase/firestore";
 
 import { db } from "../../firebase";
 
-const usersRef = collection(db, "users");
+const normalizeLoginKey = (value) => {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+};
 
 const findByUsername = async (username) => {
-  const q = query(
-    usersRef,
-    where("loginKeys", "array-contains", username)
-  );
+  const loginKey = normalizeLoginKey(username);
 
-  const snapshot = await getDocs(q);
-
-  if (snapshot.empty) {
+  if (!loginKey) {
     return null;
   }
 
-  return snapshot.docs[0].data();
+  const docRef = doc(db, "loginKeys", loginKey);
+
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    return null;
+  }
+
+  return {
+    id: docSnap.id,
+    ...docSnap.data(),
+  };
 };
 
 const getProfile = async (uid) => {
+  if (!uid) {
+    return null;
+  }
+
   const docRef = doc(db, "users", uid);
 
   const docSnap = await getDoc(docRef);
@@ -35,7 +45,10 @@ const getProfile = async (uid) => {
     return null;
   }
 
-  return docSnap.data();
+  return {
+    uid: docSnap.id,
+    ...docSnap.data(),
+  };
 };
 
 const userService = {
