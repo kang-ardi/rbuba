@@ -1,10 +1,9 @@
-import DashboardLayout from "../../layouts/MainLayout";
 import PageHeader from "../../components/common/PageHeader";
 import PagePlaceholder from "../../components/common/PagePlaceholder";
 
 export default function PaymentList() {
   return (
-    <DashboardLayout title="Pembayaran">
+    <>
 
       <PageHeader
         title="Pembayaran"
@@ -16,6 +15,6 @@ export default function PaymentList() {
         description="Fitur pembayaran akan dibuat pada Sprint 5."
       />
 
-    </DashboardLayout>
+    </>
   );
 }

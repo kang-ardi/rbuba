@@ -16,8 +16,8 @@ const WIDTH_FULL = 240;
 const WIDTH_MINI = 64;
 
 export default function Sidebar({ collapsed, isMobile, mobileOpen }) {
-  const { user } = useAuth();
-  const role = user?.role;
+  const { profile } = useAuth();
+  const role = profile?.role;
 
   const [hovered, setHovered] = useState(false);
   // Setelah klik menu: tahan hover sampai mouse benar-benar keluar dari sidebar

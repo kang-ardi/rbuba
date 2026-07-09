@@ -9,6 +9,7 @@
 export const BREADCRUMB_LABELS = {
   dashboard: "Dashboard",
   profile: "Profil",
+  users: "User",
   students: "Siswa",
   payments: "Pembayaran",
   system: "Sistem",
@@ -19,6 +20,7 @@ export const BREADCRUMB_LABELS = {
 export const LINKABLE_PATHS = [
   "/dashboard",
   "/profile",
+  "/users",
   "/students",
   "/payments",
   "/system/setup",

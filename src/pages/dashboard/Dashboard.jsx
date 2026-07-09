@@ -1,5 +1,3 @@
-import DashboardLayout from "../../layouts/MainLayout";
-
 import DashboardCard from "../../components/common/DashboardCard";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
@@ -13,7 +11,7 @@ import {
 
 export default function Dashboard() {
   return (
-    <DashboardLayout title="Dashboard">
+    <>
 
       <PageHeader
         title="Dashboard"
@@ -65,6 +63,6 @@ export default function Dashboard() {
 
       </div>
 
-    </DashboardLayout>
+    </>
   );
 }

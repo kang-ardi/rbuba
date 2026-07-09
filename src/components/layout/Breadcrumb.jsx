@@ -7,8 +7,7 @@
  * Side Effect: Tidak ada.
  */
 import { Link, useLocation } from "react-router-dom";
-import { FiHome } from "react-icons/fi";
-import { BREADCRUMB_LABELS } from "../../constants/breadcrumb";
+import { BREADCRUMB_LABELS, LINKABLE_PATHS } from "../../constants/breadcrumb";
 
 export default function Breadcrumb() {
   const { pathname } = useLocation();

@@ -24,6 +24,7 @@ import Dashboard from "../pages/dashboard/Dashboard";
 =========================== */
 
 import Profile from "../pages/profile/Profile";
+import UserList from "../pages/users/UserList";
 
 /* ===========================
    STUDENTS
@@ -91,33 +92,46 @@ export default function AppRoutes() {
 
       <Route element={<ProtectedRoute />}>
 
-          {/* Dashboard */}
+          <Route element={<MainLayout />}>
 
-          <Route
-            path="/dashboard"
-            element={<Dashboard />}
-          />
+            {/* Dashboard */}
 
-          {/* Profile */}
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
 
-          <Route
-            path="/profile"
-            element={<Profile />}
-          />
+            {/* Profile */}
 
-          {/* Students */}
+            <Route
+              path="/profile"
+              element={<Profile />}
+            />
 
-          <Route
-            path="/students"
-            element={<StudentList />}
-          />
+            <Route element={<ProtectedRoute roles={["superadmin", "admin"]} />}>
 
-          {/* Payments */}
+              <Route
+                path="/users"
+                element={<UserList />}
+              />
 
-          <Route
-            path="/payments"
-            element={<PaymentList />}
-          />
+            </Route>
+
+            {/* Students */}
+
+            <Route
+              path="/students"
+              element={<StudentList />}
+            />
+
+            {/* Payments */}
+
+            <Route
+              path="/payments"
+              element={<PaymentList />}
+            />
+
+          </Route>
 
           {/* Setup Wizard */}
 
@@ -126,50 +140,6 @@ export default function AppRoutes() {
             element={<SetupWizard />}
           />
 
-          {/* ======================================
-              SUPERADMIN
-          ====================================== */}
-
-          <Route
-            element={
-              <ProtectedRoute
-                roles={["superadmin"]}
-              />
-            }
-          >
-
-            {/*
-            <Route
-              path="/users"
-              element={<UserList />}
-            />
-            */}
-
-          </Route>
-
-          {/* ======================================
-              SUPERADMIN + ADMIN
-          ====================================== */}
-
-          <Route
-            element={
-              <ProtectedRoute
-                roles={[
-                  "superadmin",
-                  "admin",
-                ]}
-              />
-            }
-          >
-
-            {/*
-            <Route
-              path="/commitments"
-              element={<CommitmentList />}
-            />
-            */}
-
-          </Route>
       </Route>
 
       {/* ======================================

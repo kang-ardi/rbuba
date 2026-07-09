@@ -1,10 +1,9 @@
-import DashboardLayout from "../../layouts/MainLayout";
 import PageHeader from "../../components/common/PageHeader";
 import PagePlaceholder from "../../components/common/PagePlaceholder";
 
 export default function Profile() {
   return (
-    <DashboardLayout title="Profil Saya">
+    <>
 
       <PageHeader
         title="Profil Saya"
@@ -16,6 +15,6 @@ export default function Profile() {
         description="Fitur profil akan dikembangkan pada versi berikutnya."
       />
 
-    </DashboardLayout>
+    </>
   );
 }

@@ -1,6 +1,4 @@
 export default function PageLoader({
-  title = "Rumah Belajar",
-  subtitle = "Ubaidillah Bin Abdullah",
   message = "Memuat aplikasi..."
 }) {
   return (
@@ -13,7 +11,7 @@ export default function PageLoader({
         }}
         >
         <span className="visually-hidden">
-            Loading...
+            {message}
         </span>
     </div>
   );

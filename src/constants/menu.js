@@ -7,18 +7,17 @@
  * Side Effect: Tidak ada.
  */
 import {
-  FiHome, FiUsers, FiUser, FiCreditCard, FiSettings,
+  FiHome, FiUsers, FiCreditCard, FiUserCheck,
 } from "react-icons/fi";
 
 export const MENU_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: FiHome },
   { path: "/students",  label: "Siswa",     icon: FiUsers },
   { path: "/payments",  label: "Pembayaran", icon: FiCreditCard },
-  { path: "/profile",   label: "Profil",    icon: FiUser },
   {
-    path: "/system/setup",
-    label: "Setup Sistem",
-    icon: FiSettings,
-    roles: ["superadmin"],
-  },
+    path: "/users",
+    label: "User",
+    icon: FiUserCheck,
+    roles: ["superadmin", "admin"],
+  }
 ];

@@ -32,6 +32,10 @@ service cloud.firestore {
       return get(currentUserPath());
     }
 
+    function userPath(userId) {
+      return /databases/$(database)/documents/users/$(userId);
+    }
+
     function isSuperadmin() {
       return currentUserExists() &&
         currentUserDoc().data.role == "superadmin" &&
@@ -45,6 +49,29 @@ service cloud.firestore {
           "superadmin"
         ] &&
         currentUserDoc().data.active == true;
+    }
+
+    function isPlainAdmin() {
+      return currentUserExists() &&
+        currentUserDoc().data.role == "admin" &&
+        currentUserDoc().data.active == true;
+    }
+
+    function isRoleManager() {
+      return isAdmin();
+    }
+
+    function roleRank(role) {
+      return role == "superadmin" ? 1 :
+        role == "admin" ? 2 :
+        role == "siswa" ? 3 :
+        999;
+    }
+
+    function canManageRoleValue(role) {
+      return isRoleManager() &&
+        roleRank(currentUserDoc().data.role) <=
+          roleRank(role);
     }
 
     function isValidEmail(email) {
@@ -73,7 +100,7 @@ service cloud.firestore {
       return role in [
         "superadmin",
         "admin",
-        "student"
+        "siswa"
       ];
     }
 
@@ -161,6 +188,8 @@ service cloud.firestore {
     function userPrivilegeFieldsUnchanged() {
       return request.resource.data.role ==
         resource.data.role &&
+        request.resource.data.username ==
+        resource.data.username &&
         request.resource.data.email ==
         resource.data.email &&
         request.resource.data.loginKeys ==
@@ -311,7 +340,17 @@ service cloud.firestore {
 
       allow create: if isValidLoginKey(request.resource.data) &&
         (
-          isSuperadmin() ||
+          (
+            isRoleManager() &&
+            existsAfter(userPath(request.resource.data.uid)) &&
+            getAfter(userPath(request.resource.data.uid)).data.email ==
+              request.resource.data.email &&
+            getAfter(userPath(request.resource.data.uid)).data.active ==
+              request.resource.data.active &&
+            canManageRoleValue(
+              getAfter(userPath(request.resource.data.uid)).data.role
+            )
+          ) ||
           (
             isBootstrapMode() &&
             request.resource.data.uid ==
@@ -320,23 +359,40 @@ service cloud.firestore {
         );
 
       allow update: if isValidLoginKey(request.resource.data) &&
-        isSuperadmin() &&
         loginKeyCreatedAtUnchanged() &&
         request.resource.data.uid ==
           resource.data.uid &&
         request.resource.data.email ==
-          resource.data.email;
+          resource.data.email &&
+        isRoleManager() &&
+        existsAfter(userPath(request.resource.data.uid)) &&
+        getAfter(userPath(request.resource.data.uid)).data.email ==
+          request.resource.data.email &&
+        getAfter(userPath(request.resource.data.uid)).data.active ==
+          request.resource.data.active &&
+        canManageRoleValue(
+          getAfter(userPath(request.resource.data.uid)).data.role
+        );
 
       allow delete: if false;
     }
 
     match /users/{userId} {
       allow read: if isOwner(userId) ||
-        isSuperadmin();
+        isRoleManager();
 
       allow create: if isValidUser(request.resource.data) &&
         (
-          isSuperadmin() ||
+          (
+            isSuperadmin() &&
+            request.resource.data.uid == userId &&
+            canManageRoleValue(request.resource.data.role)
+          ) ||
+          (
+            isPlainAdmin() &&
+            request.resource.data.uid == userId &&
+            request.resource.data.role == "siswa"
+          ) ||
           (
             isBootstrapMode() &&
             isOwner(userId) &&
@@ -350,8 +406,25 @@ service cloud.firestore {
 
       allow update: if isValidUser(request.resource.data) &&
         userCreatedAtUnchanged() &&
+        request.resource.data.uid == resource.data.uid &&
         (
-          isSuperadmin() ||
+          (
+            isRoleManager() &&
+            canManageRoleValue(resource.data.role) &&
+            (
+              request.resource.data.role == resource.data.role ||
+              (
+                isSuperadmin() &&
+                canManageRoleValue(request.resource.data.role)
+              )
+            ) &&
+            request.resource.data.username ==
+              resource.data.username &&
+            request.resource.data.email ==
+              resource.data.email &&
+            request.resource.data.loginKeys ==
+              resource.data.loginKeys
+          ) ||
           (
             isOwner(userId) &&
             userPrivilegeFieldsUnchanged() &&
