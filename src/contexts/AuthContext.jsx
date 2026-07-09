@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -27,8 +28,8 @@ const defaultProfile = {
 };
 
 export function AuthProvider({ children }) {
-
-  const [user, setUser] = useState(null);
+  const [user, setUser] =
+    useState(null);
 
   const [profile, setProfile] =
     useState(defaultProfile);
@@ -36,148 +37,103 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] =
     useState(true);
 
-  /**
-   * systemReady
-   *
-   * null    = sedang mengecek
-   * true    = database sudah diinisialisasi
-   * false   = database belum diinisialisasi
-   * error   = gagal membaca Firestore
-   */
   const [systemReady, setSystemReady] =
     useState(null);
 
-  /**
-   * Digunakan setelah Setup Wizard selesai.
-   * Tidak mengekspos setSystemReady secara langsung.
-   */
-  const markSystemReady = () => {
-    setSystemReady(true);
-  };
+  const loadSession = useCallback(
+    async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        setProfile(defaultProfile);
+        setSystemReady(null);
+        return;
+      }
+
+      setUser(firebaseUser);
+
+      const profileData =
+        await userService.getProfile(
+          firebaseUser.uid
+        );
+
+      if (profileData) {
+        setProfile(profileData);
+      } else {
+        setProfile({
+          ...defaultProfile,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+        });
+      }
+
+      try {
+        const initialized =
+          await setupService.isInitialized();
+
+        setSystemReady(initialized);
+      } catch (error) {
+        console.error(error);
+        setSystemReady("error");
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-
     const unsubscribe =
       onAuthStateChanged(
         auth,
         async (firebaseUser) => {
-
           setLoading(true);
 
           try {
-
-            if (!firebaseUser) {
-
-              setUser(null);
-
-              setProfile(defaultProfile);
-
-              setSystemReady(null);
-
-              return;
-
-            }
-
-            setUser(firebaseUser);
-
-            const profileData =
-              await userService.getProfile(
-                firebaseUser.uid
-              );
-
-            if (profileData) {
-
-              setProfile(profileData);
-
-            } else {
-
-              setProfile({
-
-                ...defaultProfile,
-
-                uid: firebaseUser.uid,
-
-                email: firebaseUser.email,
-
-              });
-
-            }
-
-            try {
-
-              const initialized =
-                await setupService.isInitialized();
-
-              setSystemReady(initialized);
-
-            }
-
-            catch (error) {
-
-              console.error(error);
-
-              setSystemReady("error");
-
-            }
-
-          }
-
-          catch (error) {
-
+            await loadSession(firebaseUser);
+          } catch (error) {
             console.error(error);
 
             setUser(null);
-
             setProfile(defaultProfile);
-
             setSystemReady(null);
-
-          }
-
-          finally {
-
+          } finally {
             setLoading(false);
-
           }
-
         }
-
       );
 
     return () => unsubscribe();
+  }, [loadSession]);
 
-  }, []);
+  const refreshSession = async () => {
+    setLoading(true);
+
+    try {
+      await loadSession(auth.currentUser);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markSystemReady = () => {
+    setSystemReady(true);
+  };
 
   const value = {
-
     user,
-
     profile,
-
     role: profile?.role,
-
     loading,
-
     systemReady,
-
     markSystemReady,
-
+    refreshSession,
     login: authService.login,
-
     logout: authService.logout,
-
   };
 
   return (
-
     <AuthContext.Provider value={value}>
-
       {children}
-
     </AuthContext.Provider>
-
   );
-
 }
 
 export default AuthContext;

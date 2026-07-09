@@ -11,7 +11,7 @@ export default function SetupWizard() {
   const {
     user,
     profile,
-    markSystemReady,
+    refreshSession,
   } = useAuth();
 
   const [loading, setLoading] =
@@ -28,7 +28,7 @@ export default function SetupWizard() {
         profile
       );
 
-      markSystemReady();
+      await refreshSession();
 
       toast.success(
         "Database berhasil diinisialisasi."
@@ -41,7 +41,7 @@ export default function SetupWizard() {
         }
       );
     } catch (error) {
-        console.error("SETUP INITIALIZE ERROR:", {
+      console.error("SETUP INITIALIZE ERROR:", {
         code: error.code,
         name: error.name,
         message: error.message,
